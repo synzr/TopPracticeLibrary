@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using TopPracticeLibrary.Contexts;
 using TopPracticeLibrary.Services;
 
 namespace TopPracticeLibrary;
@@ -9,6 +12,13 @@ public class Program
     public static async Task Main(string[] args)
     {
         var host = CreateHost(args);
+
+        // создаем базу данных, если ее нет
+        using (var scope = host.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<LibraryDbContext>();
+            dbContext.Database.EnsureCreated();
+        }
 
         // запускаем программу
         var programService = host.Services.GetRequiredService<IProgramService>();
@@ -20,6 +30,14 @@ public class Program
         return Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
             {
+                // 1. регистрируем DbContext
+                services.AddDbContext<LibraryDbContext>(options =>
+                {
+                    options.UseSqlite(
+                        context.Configuration.GetConnectionString("DefaultConnection"));
+                });
+
+                // 2. регистрируем сервисы
                 services.AddScoped<IProgramService, ProgramService>();
             })
             .Build();
