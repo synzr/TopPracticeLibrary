@@ -11,6 +11,9 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
+        // устанавливаем кодировку UTF-8 для корректного отображения символов в консоли
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
         var host = CreateHost(args);
 
         // создаем базу данных, если ее нет
